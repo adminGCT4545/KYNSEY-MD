@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYNSEY MD - Medical ERP UI Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+        }
+        .medical-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #1e40af;
+            color: white;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        .sidebar-collapsed {
+            width: 72px;
+        }
+        .main-content {
+            flex: 1;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        .topnav {
+            background-color: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .appointment-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .appointment-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .status-confirmed {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .status-arrived {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status-completed {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+        .status-cancelled {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background-color: #1e40af;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #1c3879;
+        }
+        .btn-secondary {
+            background-color: white;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+        }
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .nav-item-icon {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        .tab-container {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .tab {
+            padding: 0.75rem 1.25rem;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tab.active {
+            color: #1e40af;
+            border-bottom-color: #1e40af;
+        }
+        .tab:hover:not(.active) {
+            color: #4b5563;
+            border-bottom-color: #e5e7eb;
+        }
+        .stat-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.25rem;
+            transition: transform 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .chart-container {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .medical-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                padding: 0.5rem;
+            }
+            .sidebar-collapsed {
+                width: 100%;
+                padding: 0.5rem;
+            }
+            .nav-item-text {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="medical-layout" id="medicalLayout">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="flex items-center justify-between mb-8">
+                <h1 class="text-xl font-bold flex items-center">
+                    <span class="mr-2"><i class="fa-solid fa-hospital"></i></span>
+                    <span class="nav-item-text">KYNSEY MD</span>
+                </h1>
+                <button id="toggleSidebar" class="text-white focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <nav>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="#" class="nav-item active" data-view="schedule">
+                            <span class="nav-item-icon"><i class="fas fa-calendar-day"></i></span>
+                            <span class="nav-item-text">Daily Schedule</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-view="patients">
+                            <span class="nav-item-icon"><i class="fas fa-user-group"></i></span>
+                            <span class="nav-item-text">Patients</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-view="billing">
+                            <span class="nav-item-icon"><i class="fas fa-file-invoice-dollar"></i></span>
+                            <span class="nav-item-text">Billing & Claims</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-view="reports">
+                            <span class="nav-item-icon"><i class="fas fa-chart-column"></i></span>
+                            <span class="nav-item-text">Reports</span>
+                        </a>
+                    </li>
+                    <li class="border-t border-blue-600 my-2 pt-2">
+                        <a href="#" class="nav-item" data-view="settings">
+                            <span class="nav-item-icon"><i class="fas fa-gear"></i></span>
+                            <span class="nav-item-text">Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-x-hidden">
+            <!-- Top Navigation Bar -->
+            <div class="topnav">
+                <div class="flex items-center">
+                    <h2 class="text-lg font-semibold" id="viewTitle">Daily Schedule</h2>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative flex items-center">
+                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-md mr-2">
+                            <i class="fas fa-clinic-medical mr-1"></i>Main Clinic
+                        </span>
+                        <span class="text-gray-700">Dr. John Smith</span>
+                    </div>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="main-content overflow-y-auto">
+
+                <!-- View Container -->
+                <div id="viewContainer">
+                    <!-- Schedule View -->
+                    <div id="scheduleView" class="view-content">
+                        <!-- Location and Date Controls -->
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+                            <div class="location-selector">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                                <select class="border border-gray-300 rounded-md px-3 py-2 w-64">
+                                    <option>Main Clinic</option>
+                                    <option>Downtown Office</option>
+                                    <option>Westside Branch</option>
+                                </select>
+                            </div>
+                            <div class="date-navigator flex items-center space-x-2">
+                                <button class="btn btn-secondary"><i class="fas fa-chevron-left mr-1"></i> Previous</button>
+                                <div class="text-center">
+                                    <div class="text-sm text-gray-500">Today</div>
+                                    <div class="font-semibold">May 8, 2025</div>
+                                </div>
+                                <button class="btn btn-secondary">Next <i class="fas fa-chevron-right ml-1"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Stats Overview -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="stat-card">
+                                <div class="text-sm text-gray-500">Total Appointments</div>
+                                <div class="text-2xl font-bold">12</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="text-sm text-gray-500">Confirmed</div>
+                                <div class="text-2xl font-bold text-blue-600">8</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="text-sm text-gray-500">Arrived</div>
+                                <div class="text-2xl font-bold text-green-600">3</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="text-sm text-gray-500">Available Slots</div>
+                                <div class="text-2xl font-bold text-gray-600">5</div>
+                            </div>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div class="status-filter mb-6 p-4 bg-white rounded-lg shadow">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status Filter</label>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-blue-600" checked>
+                                    <span class="ml-2">Scheduled</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-blue-600" checked>
+                                    <span class="ml-2">Confirmed</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-blue-600" checked>
+                                    <span class="ml-2">Arrived</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-blue-600">
+                                    <span class="ml-2">Completed</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" class="form-checkbox text-blue-600">
+                                    <span class="ml-2">Cancelled</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Appointment Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Operatory 1 -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-800 border-b pb-2">
+                                    <i class="fas fa-door-open mr-2 text-blue-600"></i>Operatory 1
+                                </h3>
+                                
+                                <div class="appointment-card">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div class="font-semibold">Robert Anderson</div>
+                                            <div class="text-sm text-gray-500">9:00 AM - 10:00 AM (60 min)</div>
+                                        </div>
+                                        <span class="status-badge status-confirmed">Confirmed</span>
+                                    </div>
+                                    <div class="text-sm mb-2">
+                                        <div><span class="font-medium">Type:</span> Recall</div>
+                                        <div><span class="font-medium">Provider:</span> Dr. John Smith</div>
+                                        <div><span class="font-medium">Phone:</span> 555-111-2222</div>
+                                    </div>
+                                    <div class="text-sm text-gray-600">Regular checkup and cleaning</div>
+                                    <div class="mt-3 flex justify-end space-x-2">
+                                        <button class="text-sm text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-eye mr-1"></i> View
+                                        </button>
+                                        <button class="text-sm text-green-600 hover:text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i> Check In
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="appointment-card">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div class="font-semibold">Michael Brown</div>
+                                            <div class="text-sm text-gray-500">11:00 AM - 12:00 PM (60 min)</div>
+                                        </div>
+                                        <span class="status-badge status-arrived">Arrived</span>
+                                    </div>
+                                    <div class="text-sm mb-2">
+                                        <div><span class="font-medium">Type:</span> Procedure</div>
+                                        <div><span class="font-medium">Provider:</span> Dr. John Smith</div>
+                                        <div><span class="font-medium">Phone:</span> 555-777-8888</div>
+                                    </div>
+                                    <div class="text-sm text-gray-600">Crown preparation</div>
+                                    <div class="mt-3 flex justify-end space-x-2">
+                                        <button class="text-sm text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-eye mr-1"></i> View
+                                        </button>
+                                        <button class="text-sm text-purple-600 hover:text-purple-800">
+                                            <i class="fas fa-play-circle mr-1"></i> Start
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Operatory 2 -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-800 border-b pb-2">
+                                    <i class="fas fa-door-open mr-2 text-blue-600"></i>Operatory 2
+                                </h3>
+                                
+                                <div class="appointment-card">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div class="font-semibold">Jennifer Taylor</div>
+                                            <div class="text-sm text-gray-500">10:30 AM - 11:30 AM (60 min)</div>
+                                        </div>
+                                        <span class="status-badge status-confirmed">Confirmed</span>
+                                    </div>
+                                    <div class="text-sm mb-2">
+                                        <div><span class="font-medium">Type:</span> Emergency</div>
+                                        <div><span class="font-medium">Provider:</span> Dr. John Smith</div>
+                                        <div><span class="font-medium">Phone:</span> 555-222-3333</div>
+                                    </div>
+                                    <div class="text-sm text-gray-600">Tooth pain</div>
+                                    <div class="mt-3 flex justify-end space-x-2">
+                                        <button class="text-sm text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-eye mr-1"></i> View
+                                        </button>
+                                        <button class="text-sm text-green-600 hover:text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i> Check In
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="appointment-card">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div class="font-semibold">Robert Anderson</div>
+                                            <div class="text-sm text-gray-500">1:30 PM - 2:30 PM (60 min)</div>
+                                        </div>
+                                        <span class="status-badge status-confirmed">Confirmed</span>
+                                    </div>
+                                    <div class="text-sm mb-2">
+                                        <div><span class="font-medium">Type:</span> Procedure</div>
+                                        <div><span class="font-medium">Provider:</span> Dr. John Smith</div>
+                                        <div><span class="font-medium">Phone:</span> 555-111-2222</div>
+                                    </div>
+                                    <div class="text-sm text-gray-600">Filling</div>
+                                    <div class="mt-3 flex justify-end space-x-2">
+                                        <button class="text-sm text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-eye mr-1"></i> View
+                                        </button>
+                                        <button class="text-sm text-green-600 hover:text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i> Check In
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Operatory 3 -->
+                            <div class="space-y-4">
+                                <h3 class="text-lg font-medium text-gray-800 border-b pb-2">
+                                    <i class="fas fa-door-open mr-2 text-blue-600"></i>Operatory 3
+                                </h3>
+                                
+                                <div class="appointment-card">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div class="font-semibold">Elizabeth Johnson</div>
+                                            <div class="text-sm text-gray-500">1:00 PM - 2:00 PM (60 min)</div>
+                                        </div>
+                                        <span class="status-badge status-confirmed">Confirmed</span>
+                                    </div>
+                                    <div class="text-sm mb-2">
+                                        <div><span class="font-medium">Type:</span> Recall</div>
+                                        <div><span class="font-medium">Provider:</span> Sarah Wilson</div>
+                                        <div><span class="font-medium">Phone:</span> 555-444-5555</div>
+                                    </div>
+                                    <div class="text-sm text-gray-600">Regular cleaning</div>
+                                    <div class="mt-3 flex justify-end space-x-2">
+                                        <button class="text-sm text-blue-600 hover:text-blue-800">
+                                            <i class="fas fa-eye mr-1"></i> View
+                                        </button>
+                                        <button class="text-sm text-green-600 hover:text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i> Check In
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Add Appointment Button -->
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:bg-gray-50 cursor-pointer">
+                                    <div class="text-gray-400">
+                                        <i class="fas fa-plus-circle text-2xl"></i>
+                                        <p class="mt-1">Add Appointment</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Patients View -->
+                    <div id="patientsView" class="view-content hidden">
+                        <div class="mb-6">
+                            <h2 class="text-xl font-bold mb-4">Patient Management</h2>
+                            
+                            <div class="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                                <div class="flex-1">
+                                    <div class="relative">
+                                        <input type="text" placeholder="Search patients..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <div class="absolute left-3 top-2.5 text-gray-400">
+                                            <i class="fas fa-search"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary">
+                                        <i class="fas fa-plus mr-2"></i> New Patient
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Patient List -->
+                            <div class="bg-white rounded-lg shadow overflow-hidden">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Name
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                DOB / Gender
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Contact
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Last Visit
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="h-10 w-10 flex-shrink-0">
+                                                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-100 text-blue-600">
+                                                            RA
+                                                        </span>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            Robert Anderson
+                                                        </div>
+                                                        <div class="text-sm text-gray-500">
+                                                            #PT10045
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">05/12/1975</div>
+                                                <div class="text-sm text-gray-500">Male</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">555-111-2222</div>
+                                                <div class="text-sm text-gray-500">robert.a@example.com</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                Apr 15, 2025
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button class="text-blue-600 hover:text-blue-900 mr-3">
+                                                    <i class="fas fa-eye mr-1"></i> View
+                                                </button>
+                                                <button class="text-green-600 hover:text-green-900">
+                                                    <i class="fas fa-calendar-plus mr-1"></i> Schedule
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="h-10 w-10 flex-shrink-0">
+                                                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-green-100 text-green-600">
+                                                            JT
+                                                        </span>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            Jennifer Taylor
+                                                        </div>
+                                                        <div class="text-sm text-gray-500">
+                                                            #PT10046
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">08/23/1982</div>
+                                                <div class="text-sm text-gray-500">Female</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">555-222-3333</div>
+                                                <div class="text-sm text-gray-500">jennifer.t@example.com</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                May 7, 2025
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button class="text-blue-600 hover:text-blue-900 mr-3">
+                                                    <i class="fas fa-eye mr-1"></i> View
+                                                </button>
+                                                <button class="text-green-600 hover:text-green-900">
+                                                    <i class="fas fa-calendar-plus mr-1"></i> Schedule
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-4 flex justify-between items-center">
+                                <div class="text-sm text-gray-700">
+                                    Showing <span class="font-medium">1</span> to <span class="font-medium">2</span> of <span class="font-medium">125</span> patients
+                                </div>
+                                <div>
+                                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Previous</span>
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600 hover:bg-blue-100">
+                                            1
+                                        </a>
+                                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                            2
+                                        </a>
+                                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                            3
+                                        </a>
+                                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                            ...
+                                        </span>
+                                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                            13
+                                        </a>
+                                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <span class="sr-only">Next</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Billing & Claims View -->
+                    <div id="billingView" class="view-content hidden">
+                        <div class="mb-6">
+                            <h2 class="text-xl font-bold mb-4">Billing & Claims</h2>
+                            
+                            <div class="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                                <div class="flex space-x-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                        <input type="date" class="border border-gray-300 rounded-md px-3 py-2">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                        <input type="date" class="border border-gray-300 rounded-md px-3 py-2">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                        <select class="border border-gray-300 rounded-md px-3 py-2">
+                                            <option>All</option>
+                                            <option>Pending</option>
+                                            <option>Paid</option>
+                                            <option>Denied</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="self-end">
+                                    <button class="btn btn-primary">
+                                        <i class="fas fa-file-invoice mr-2"></i> New Claim
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Billing Stats -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                <div class="stat-card">
+                                    <div class="text-sm text-gray-500">Total Claims</div>
+                                    <div class="text-2xl font-bold">85</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="text-sm text-gray-500">Pending</div>
+                                    <div class="text-2xl font-bold text-yellow-600">32</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="text-sm text-gray-500">Paid</div>
+                                    <div class="text-2xl font-bold text-green-600">48</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="text-sm text-gray-500">Denied</div>
+                                    <div class="text-2xl font-bold text-red-600">5</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Claims List -->
+                            <div class="bg-white rounded-lg shadow overflow-hidden">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Claim #
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Patient
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Date
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Amount
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Status
+                                            </th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">CLM-10045</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">Robert Anderson</div>
+                                                <div class="text-sm text-gray-500">#PT10045</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">May 5, 2025</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">$450.00</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                    Pending
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <button class="text-blue-600 hover:text-blue-900 mr-3">
+                                                    <i class="fas fa-eye mr-1"></i> View
+                                                </button>
+                                                <button class="text-green-600 hover:text-green-900">
+                                                    <i class="fas fa-edit mr-1"></i> Edit
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm font-medium text-gray-900">CLM-10044</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">Jennifer Taylor</div>
+                                                <div class="text-sm text-gray-500">#PT10046</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">May 1, 2025</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">$1,200.00</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                    Paid
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <button class="text-blue-600 hover:text-blue-900 mr-3">
+                                                    <i class="fas fa-eye mr-1"></i> View
+                                                </button>
+                                                <button class="text-gray-400 cursor-not-allowed">
+                                                    <i class="fas fa-edit mr-1"></i> Edit
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reports & Analytics View -->
+                    <div id="reportsView" class="view-content hidden">
+                        <div class="mb-6">
+                            <h2 class="text-xl font-bold mb-4">Reports & Analytics</h2>
+                            
+                            <!-- Report Controls -->
+                            <div class="bg-white p-4 rounded-lg shadow mb-6">
+                                <div class="flex flex-col md:flex-row gap-4">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
+                                        <select class="border border-gray-300 rounded-md px-3 py-2 w-full">
+                                            <option>Financial Reports</option>
+                                            <option>Patient Demographics</option>
+                                            <option>Appointment Statistics</option>
+                                            <option>Claims Analysis</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex-1 flex space-x-4">
+                                        <div class="flex-1">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                            <input type="date" class="border border-gray-300 rounded-md px-3 py-2 w-full">
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                            <input type="date" class="border border-gray-300 rounded-md px-3 py-2 w-full">
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                                        <select class="border border-gray-300 rounded-md px-3 py-2 w-full">
+                                            <option>All Locations</option>
+                                            <option>Main Clinic</option>
+                                            <option>Downtown Office</option>
+                                            <option>Westside Branch</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Financial Reports Section -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div class="chart-container">
+                                    <h3 class="text-lg font-medium mb-4">Revenue vs. Expenses</h3>
+                                    <div class="h-64 flex items-center justify-center bg-gray-100">
+                                        <div class="text-center text-gray-500">
+                                            <i class="fas fa-chart-bar text-4xl mb-2"></i>
+                                            <p>Revenue / Expense Bar Chart</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="chart-container">
+                                    <h3 class="text-lg font-medium mb-4">Claim Status Distribution</h3>
+                                    <div class="h-64 flex items-center justify-center bg-gray-100">
+                                        <div class="text-center text-gray-500">
+                                            <i class="fas fa-chart-pie text-4xl mb-2"></i>
+                                            <p>Claims Pie Chart</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-container">
+                                <h3 class="text-lg font-medium mb-4">Daily Revenue</h3>
+                                <div class="h-64 flex items-center justify-center bg-gray-100">
+                                    <div class="text-center text-gray-500">
+                                        <i class="fas fa-chart-line text-4xl mb-2"></i>
+                                        <p>Daily Revenue Line Chart</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Toggle sidebar
+        document.getElementById('toggleSidebar').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            const navItemTexts = document.querySelectorAll('.nav-item-text');
+            
+            sidebar.classList.toggle('sidebar-collapsed');
+            
+            // Handle mobile layout differently
+            if (window.innerWidth > 768) {
+                navItemTexts.forEach(function(element) {
+                    if (sidebar.classList.contains('sidebar-collapsed')) {
+                        element.style.display = 'none';
+                    } else {
+                        element.style.display = 'inline';
+                    }
+                });
+            }
+        });
+        
+        // Tab navigation
+        document.querySelectorAll('.nav-item').forEach(function(navItem) {
+            navItem.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Update active state
+                document.querySelectorAll('.nav-item').forEach(function(item) {
+                    item.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Show corresponding view
+                const viewId = this.getAttribute('data-view') + 'View';
+                document.querySelectorAll('.view-content').forEach(function(view) {
+                    view.classList.add('hidden');
+                });
+                document.getElementById(viewId).classList.remove('hidden');
+                
+                // Update view title
+                const viewTitle = this.querySelector('.nav-item-text').textContent;
+                document.getElementById('viewTitle').textContent = viewTitle;
+            });
+        });
+    </script>
+</body>
+</html>

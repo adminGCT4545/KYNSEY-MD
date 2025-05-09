@@ -1,0 +1,20 @@
+{
+  "name": "booksl-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.15.6"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}
