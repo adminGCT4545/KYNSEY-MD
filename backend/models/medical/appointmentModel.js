@@ -3,7 +3,7 @@
  * Handles database operations related to appointments
  */
 
-const { pool } = require('../../utils/db');
+import { pool } from '../../utils/db.js';
 
 /**
  * Get all appointments with optional filtering
@@ -529,7 +529,7 @@ const getDailySchedule = async (date, locationId) => {
   }
 };
 
-module.exports = {
+export {
   getAllAppointments,
   getAppointmentById,
   createAppointment,

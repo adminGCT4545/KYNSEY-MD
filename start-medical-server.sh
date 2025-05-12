@@ -13,6 +13,14 @@ echo "========================================="
 echo "KYNSEY MD Medical ERP Server"
 echo "========================================="
 
+# Ensure the PostgreSQL connection check script is executable
+PG_CHECK_SCRIPT="$SCRIPT_DIR/check-postgres-connection.sh"
+if [ -f "$PG_CHECK_SCRIPT" ]; then
+    echo "Making PostgreSQL connection check script executable..."
+    chmod +x "$PG_CHECK_SCRIPT"
+    echo "✓ PostgreSQL connection check script is now executable"
+fi
+
 # Check if PostgreSQL is running
 echo "Checking PostgreSQL server status..."
 if pg_isready -h localhost -p 5432 > /dev/null 2>&1; then

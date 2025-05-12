@@ -3,9 +3,10 @@
  * Handles API endpoints related to appointments
  */
 
-const express = require('express');
+import express from 'express';
+import * as appointmentModel from '../../models/medical/appointmentModel.js';
+
 const router = express.Router();
-const appointmentModel = require('../../models/medical/appointmentModel');
 
 /**
  * @route   GET /api/medical/appointments
@@ -210,4 +211,4 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

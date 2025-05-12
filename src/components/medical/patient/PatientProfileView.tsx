@@ -6,6 +6,7 @@ import PatientTimelineView from './PatientTimelineView';
 import PatientChartsView from './PatientChartsView';
 import PatientBillingView from './PatientBillingView';
 import PatientDocumentsView from './PatientDocumentsView';
+import MedicationList from '../Medications/MedicationList';
 
 interface Patient {
   id: string;
@@ -113,6 +114,16 @@ const PatientProfileView: React.FC = () => {
       default:
         return 'bg-blue-100 text-blue-800';
     }
+  };
+
+  const handleMedicationView = (medicationId: number) => {
+    console.log(`View medication details: ${medicationId}`);
+    // Implementation for viewing medication details
+  };
+
+  const handleRefillRequest = (medicationId: number) => {
+    console.log(`Request refill for medication: ${medicationId}`);
+    // Implementation for medication refill requests
   };
 
   if (loading) {
@@ -275,6 +286,17 @@ const PatientProfileView: React.FC = () => {
               >
                 Documents
               </button>
+              
+              <button
+                className={`${
+                  activeTab === 'medications'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm`}
+                onClick={() => handleTabChange('medications')}
+              >
+                Medications
+              </button>
             </nav>
           </div>
         </div>
@@ -428,6 +450,24 @@ const PatientProfileView: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Recent medications summary in overview tab */}
+            <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+              <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
+                <h3 className="text-lg font-medium leading-6 text-gray-900">
+                  Medications
+                </h3>
+              </div>
+              <div className="px-4 py-5 sm:p-6">
+                <MedicationList 
+                  patientId={patient.id} 
+                  compact={true}
+                  maxItems={3}
+                  onViewDetails={handleMedicationView}
+                  onRefill={handleRefillRequest}
+                />
+              </div>
+            </div>
           </div>
         )}
         
@@ -435,6 +475,23 @@ const PatientProfileView: React.FC = () => {
         {activeTab === 'charts' && <PatientChartsView patientId={patientId!} />}
         {activeTab === 'billing' && <PatientBillingView patientId={patientId!} />}
         {activeTab === 'documents' && <PatientDocumentsView patientId={patientId!} />}
+        {activeTab === 'medications' && (
+          <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+            <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
+              <h3 className="text-lg font-medium leading-6 text-gray-900">
+                Medications
+              </h3>
+            </div>
+            <div className="px-4 py-5 sm:p-6">
+              <MedicationList 
+                patientId={patient.id}
+                showActions={true}
+                onViewDetails={handleMedicationView}
+                onRefill={handleRefillRequest}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

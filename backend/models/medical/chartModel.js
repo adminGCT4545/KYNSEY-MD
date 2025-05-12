@@ -796,6 +796,47 @@ const chartModel = {
       console.error('Error getting document by ID:', error);
       throw error;
     }
+  },
+
+  /**
+   * Get patient chart entries
+   * @param {number} patientId - Patient ID
+   * @param {Object} filters - Optional filters
+   * @returns {Promise<Array>} - Patient chart entries
+   */
+  async getPatientCharts(patientId, filters = {}) {
+    try {
+      // Build query to fetch chart entries directly from our new table
+      const query = `
+        SELECT 
+          entry_id as id,
+          patient_id,
+          appointment_id,
+          entry_type,
+          created_at as date,
+          subjective,
+          objective,
+          assessment,
+          plan,
+          additional_notes,
+          created_by as provider_id,
+          is_signed,
+          signed_at,
+          updated_at
+        FROM 
+          medical_chart_entries
+        WHERE 
+          patient_id = $1
+        ORDER BY 
+          created_at DESC
+      `;
+      
+      const result = await db.query(query, [patientId]);
+      return result.rows;
+    } catch (error) {
+      console.error(`Error fetching chart entries for patient ${patientId}:`, error);
+      throw error;
+    }
   }
 };
 

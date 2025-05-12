@@ -54,6 +54,13 @@ const MedicalDashboardView: React.FC = () => {
       color: "bg-purple-500"
     },
     {
+      title: "Production Tracking",
+      description: "Track production, collections, and financial performance",
+      icon: "💲",
+      link: "/medical/production",
+      color: "bg-indigo-500"
+    },
+    {
       title: "Billing & Claims",
       description: "Manage insurance claims, billing information, and payment status",
       icon: "💵",

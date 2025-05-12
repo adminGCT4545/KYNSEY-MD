@@ -1,0 +1,14 @@
+          table_name          
+------------------------------
+ medical_users
+ medical_providers
+ medical_locations
+ medical_patients
+ medical_patient_insurance
+ medical_operatories
+ medical_appointments
+ medical_appointment_services
+ medical_services
+ medical_production_log
+(10 rows)
+

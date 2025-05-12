@@ -45,6 +45,7 @@ const PatientChartsView: React.FC<PatientChartsViewProps> = ({ patientId }) => {
   const [selectedEntry, setSelectedEntry] = useState<ChartEntry | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState<boolean>(false);
   
   // Available vital sign types
   const vitalTypes = [
@@ -60,9 +61,11 @@ const PatientChartsView: React.FC<PatientChartsViewProps> = ({ patientId }) => {
   
   // Fetch vital signs and chart entries on component mount
   useEffect(() => {
-    const fetchChartData = async () => {
+    const fetchChartData = async (isRetry = false) => {
       try {
         setLoading(true);
+        setError(null);
+        if (isRetry) setRetrying(true);
         
         const [vitalSignsResponse, chartEntriesResponse] = await Promise.all([
           medicalService.getVitalSigns(patientId),
@@ -76,11 +79,18 @@ const PatientChartsView: React.FC<PatientChartsViewProps> = ({ patientId }) => {
           setSelectedEntry(chartEntriesResponse.data[0]);
         }
         
-        setLoading(false);
-      } catch (err) {
+        setError(null);
+      } catch (err: any) {
         console.error('Error fetching chart data:', err);
-        setError('Failed to load chart data. Please try again later.');
+        const errorMessage = err.statusCode === 404
+          ? 'Patient chart not found.'
+          : !navigator.onLine
+          ? 'No internet connection. Please check your network and try again.'
+          : 'Failed to load chart data. Please try again.';
+        setError(errorMessage);
+      } finally {
         setLoading(false);
+        setRetrying(false);
       }
     };
 
@@ -198,18 +208,31 @@ const PatientChartsView: React.FC<PatientChartsViewProps> = ({ patientId }) => {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="flex flex-col items-center justify-center p-8">
+        <LoadingSpinner />
+        {retrying && (
+          <p className="mt-4 text-gray-600">Retrying connection...</p>
+        )}
+      </div>
+    );
   }
   
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-300 rounded-md">
-        <p className="text-red-700">{error}</p>
+      <div className="p-6 bg-red-50 border border-red-300 rounded-lg shadow-sm">
+        <div className="flex items-center mb-4">
+          <svg className="w-6 h-6 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-red-700 font-medium">{error}</p>
+        </div>
         <button
-          className="mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
-          onClick={() => window.location.reload()}
+          className="mt-2 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          onClick={() => fetchChartData(true)}
+          disabled={retrying}
         >
-          Retry
+          {retrying ? 'Retrying...' : 'Retry Now'}
         </button>
       </div>
     );

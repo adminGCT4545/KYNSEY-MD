@@ -24,9 +24,24 @@ const importRoutes = async () => {
     const appointmentRoutesPath = path.join(__dirname, 'medical', 'appointmentRoutes.js');
     const appointmentRoutes = await import(`file://${appointmentRoutesPath}`);
     
+    // Import location routes
+    const locationRoutesPath = path.join(__dirname, 'medical', 'locationRoutes.js');
+    const locationRoutes = await import(`file://${locationRoutesPath}`);
+    
+    // Import provider routes
+    const providerRoutesPath = path.join(__dirname, 'medical', 'providerRoutes.js');
+    const providerRoutes = await import(`file://${providerRoutesPath}`);
+    
+    // Import chart routes
+    const chartRoutesPath = path.join(__dirname, 'medical', 'chartRoutes.js');
+    const chartRoutes = await import(`file://${chartRoutesPath}`);
+    
     // Register routes
     router.use('/patients', patientRoutes.default);
     router.use('/appointments', appointmentRoutes.default);
+    router.use('/locations', locationRoutes.default);
+    router.use('/providers', providerRoutes.default);
+    router.use('/charts', chartRoutes.default);
     
     console.log('Medical routes registered successfully');
   } catch (error) {
@@ -47,6 +62,18 @@ router.get('/', (req, res) => {
       {
         path: '/api/medical/appointments',
         description: 'Appointment management endpoints'
+      },
+      {
+        path: '/api/medical/locations',
+        description: 'Medical locations endpoints'
+      },
+      {
+        path: '/api/medical/providers',
+        description: 'Medical providers endpoints'
+      },
+      {
+        path: '/api/medical/charts',
+        description: 'Patient charts and medical records endpoints'
       }
     ]
   });

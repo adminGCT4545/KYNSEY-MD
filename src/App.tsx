@@ -1,87 +1,80 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Dashboard from './components/Dashboard';
-import ProcurementSchedules from './components/ProcurementSchedules';
-import InvoiceIntake from './components/InvoiceIntake';
-import AutomatedOrders from './components/AutomatedOrders';
-import SupplierManagement from './components/SupplierManagement';
-import Membership from './components/Membership';
-import Layout from './components/Layout';
+import MedicalLayout from '@components/medical/MedicalLayout';
 import './index.css';
 
-// Import or create placeholder components for the additional pages
-import Reports from './components/Reports';
-import ErpModeling from './components/ErpModeling';
-import SystemLogs from './components/SystemLogs';
+// Lazy load medical module components
+const MedicalModule = React.lazy(() => import('./modules/MedicalModule'));
+const ReportsAnalyticsView = React.lazy(() => import('@medical/ReportsAnalyticsView'));
+const PatientManagementView = React.lazy(() => import('@medical/PatientManagementView'));
+const PatientProfileView = React.lazy(() => import('@medical/PatientProfileView'));
+const BillingClaimsView = React.lazy(() => import('@medical/BillingClaimsView'));
+const MedicalDashboardView = React.lazy(() => import('@medical/MedicalDashboardView'));
+const ProductionTrackingView = React.lazy(() => import('@medical/ProductionTrackingView'));
+// Import ChartsView using the index file approach
+const ChartsView = React.lazy(() => import('@medical').then(module => ({ default: module.ChartsView })));
 
-// Import medical module components
-import DailySchedulerView from './components/medical/DailySchedulerView';
-import ReportsAnalyticsView from './components/medical/ReportsAnalyticsView';
-import PatientManagementView from './components/medical/PatientManagementView';
-import PatientProfileView from './components/medical/PatientProfileView';
-import BillingClaimsView from './components/medical/BillingClaimsView';
-import MedicalDashboardView from './components/medical/MedicalDashboardView';
+// Loading component for Suspense fallback
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+  </div>
+);
 
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* Procurement ERP Routes */}
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+        {/* KYNSEY MD Routes */}
         <Route path="/" element={
-          <Layout title="Dashboard - TimeWise Procurement">
-            <Dashboard />
-          </Layout>
+          <MedicalLayout title="KYNSEY MD - Medical Dashboard">
+            <MedicalDashboardView />
+          </MedicalLayout>
         } />
-        <Route path="/procurement-schedules" element={
-          <Layout title="Procurement Schedules - TimeWise Procurement">
-            <ProcurementSchedules />
-          </Layout>
+        <Route path="/medical" element={
+          <MedicalLayout title="KYNSEY MD - Medical Dashboard">
+            <MedicalDashboardView />
+          </MedicalLayout>
         } />
-        <Route path="/invoice-intake" element={
-          <Layout title="Invoice Intake - TimeWise Procurement">
-            <InvoiceIntake />
-          </Layout>
+        <Route path="/medical/daily" element={
+          <MedicalLayout title="KYNSEY MD - Daily Schedule">
+            <MedicalModule />
+          </MedicalLayout>
         } />
-        <Route path="/automated-orders" element={
-          <Layout title="Automated Orders - TimeWise Procurement">
-            <AutomatedOrders />
-          </Layout>
+        <Route path="/medical/reports" element={
+          <MedicalLayout title="KYNSEY MD - Reports & Analytics">
+            <ReportsAnalyticsView />
+          </MedicalLayout>
         } />
-        <Route path="/supplier-management" element={
-          <Layout title="Supplier Management - TimeWise Procurement">
-            <SupplierManagement />
-          </Layout>
+        <Route path="/medical/production" element={
+          <MedicalLayout title="KYNSEY MD - Production Tracking">
+            <ProductionTrackingView />
+          </MedicalLayout>
         } />
-        <Route path="/reports" element={
-          <Layout title="Reports - TimeWise Procurement">
-            <Reports />
-          </Layout>
+        <Route path="/medical/patients" element={
+          <MedicalLayout title="KYNSEY MD - Patient Management">
+            <PatientManagementView />
+          </MedicalLayout>
         } />
-        <Route path="/erp-modeling" element={
-          <Layout title="ERP Modeling - TimeWise Procurement">
-            <ErpModeling />
-          </Layout>
+        <Route path="/medical/patients/:patientId" element={
+          <MedicalLayout title="KYNSEY MD - Patient Profile">
+            <PatientProfileView />
+          </MedicalLayout>
         } />
-        <Route path="/system-logs" element={
-          <Layout title="System Logs - TimeWise Procurement">
-            <SystemLogs />
-          </Layout>
+        <Route path="/medical/billing" element={
+          <MedicalLayout title="KYNSEY MD - Billing & Claims">
+            <BillingClaimsView />
+          </MedicalLayout>
         } />
-        <Route path="/membership" element={
-          <Layout title="Membership Management - TimeWise Procurement">
-            <Membership />
-          </Layout>
+        <Route path="/medical/charts" element={
+          <MedicalLayout title="KYNSEY MD - Medical Charts">
+            <ChartsView />
+          </MedicalLayout>
         } />
-        
-        {/* Medical ERP Routes */}
-        <Route path="/medical" element={<MedicalDashboardView />} />
-        <Route path="/medical/daily" element={<DailySchedulerView />} />
-        <Route path="/medical/reports" element={<ReportsAnalyticsView />} />
-        <Route path="/medical/patients" element={<PatientManagementView />} />
-        <Route path="/medical/patients/:patientId" element={<PatientProfileView />} />
-        <Route path="/medical/billing" element={<BillingClaimsView />} />
         {/* Additional medical routes will be added here as they are developed */}
-      </Routes>
+        </Routes>
+      </Suspense>
     </Router>
   );
 }

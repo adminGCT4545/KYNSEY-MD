@@ -7,7 +7,7 @@
 PGHOST=${PGHOST:-"localhost"}
 PGUSER=${PGUSER:-"postgres"}
 PGPASSWORD=${PGPASSWORD:-"postgres"}
-PGDATABASE=${PGDATABASE:-"timewise_procument"}
+PGDATABASE=${PGDATABASE:-"kynsey_md"}
 PGPORT=${PGPORT:-"5432"}
 
 # Display connection information
@@ -68,8 +68,23 @@ read -p "Do you want to insert sample data for testing? (y/n): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
-    echo "Sample data insertion is not implemented yet."
-    echo "You can manually insert sample data or implement this feature later."
+    echo "Inserting main sample data from insert-medical-sample-data.sql..."
+    PGPASSWORD=$PGPASSWORD psql -h $PGHOST -U $PGUSER -d $PGDATABASE -p $PGPORT -f insert-medical-sample-data.sql
+    if [ $? -eq 0 ]; then
+        echo "Main sample data inserted successfully."
+    else
+        echo "Error inserting main sample data. Please check insert-medical-sample-data.sql and permissions."
+    fi
+
+    echo "Creating chart-specific tables and inserting sample data from create-chart-tables-and-sample-data.sql..."
+    PGPASSWORD=$PGPASSWORD psql -h $PGHOST -U $PGUSER -d $PGDATABASE -p $PGPORT -f create-chart-tables-and-sample-data.sql
+    if [ $? -eq 0 ]; then
+        echo "Chart-specific tables and sample data created successfully."
+    else
+        echo "Error creating chart-specific tables/data. Please check create-chart-tables-and-sample-data.sql and permissions."
+    fi
+else
+    echo "Sample data insertion skipped."
 fi
 
 echo "Setup complete."

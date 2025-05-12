@@ -1,3 +1,41 @@
+import axios from 'axios';
+
+// API base URL - Updated to use the correct port from your backend server
+const API_BASE_URL = 'http://localhost:8888'; // This should match your backend's port from server.js
+
+// Create axios instance
+// Create axios instance with retries and timeout
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000, // 10 second timeout
+});
+
+// Add retry logic
+apiClient.interceptors.response.use(undefined, async (error) => {
+  if (error.config && error.config.__retryCount < 2) {
+    error.config.__retryCount = error.config.__retryCount || 0;
+    error.config.__retryCount++;
+
+    // Exponential backoff
+    const backoff = Math.pow(2, error.config.__retryCount) * 1000;
+    await new Promise(resolve => setTimeout(resolve, backoff));
+
+    return apiClient(error.config);
+  }
+  
+  // Parse error for more specific messages
+  const errorMessage = error.response?.data?.message || error.message;
+  const statusCode = error.response?.status;
+  const enhancedError = new Error(errorMessage);
+  (enhancedError as any).statusCode = statusCode;
+  (enhancedError as any).originalError = error;
+  
+  throw enhancedError;
+});
+
 interface Patient {
   patient_id: string;
   first_name: string;
@@ -48,6 +86,19 @@ interface ChartData {
   notes: string;
 }
 
+// New interface for vital signs - updated to match the component's expectations
+interface VitalSign {
+  id?: string;
+  patient_id: string;
+  date: string;
+  vital_type: string;  // Changed from type to vital_type to match component
+  value: number;
+  unit: string;
+  notes?: string;
+  recorded_by?: string;
+  recorded_at?: string;
+}
+
 interface ReportData {
   financial: {
     revenue: {
@@ -84,86 +135,111 @@ interface ReportData {
 
 class MedicalService {
   async getPatients(filters?: any) {
-    const mockPatients: Patient[] = [
-      {
-        patient_id: '101',
-        first_name: 'John',
-        last_name: 'Doe',
-        date_of_birth: '1985-06-15',
-        gender: 'Male'
-      },
-      {
-        patient_id: '102',
-        first_name: 'Jane',
-        last_name: 'Smith',
-        date_of_birth: '1990-03-20',
-        gender: 'Female'
+    try {
+      if (!navigator.onLine) {
+        throw new Error('No internet connection. Please check your network and try again.');
       }
-    ];
-    return Promise.resolve({ data: mockPatients });
+      const response = await apiClient.get('/api/medical/patients', { params: filters });
+      return response;
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+      throw error;
+    }
   }
 
+  async getPatientById(patientId: string) {
+    try {
+      const response = await apiClient.get(`/api/medical/patients/${patientId}`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching patient ${patientId}:`, error);
+      throw error;
+    }
+  }
+
+  // Alias for getPatient to maintain backward compatibility
   async getPatient(patientId: string) {
-    const mockPatient: Patient = {
-      patient_id: patientId,
-      first_name: 'Jane',
-      last_name: 'Smith',
-      date_of_birth: '1985-06-15',
-      gender: 'Female',
-      email: 'jane.smith@example.com',
-      phone: '(555) 123-4567',
-      address: '123 Main Street',
-      city: 'Anytown',
-      state: 'CA',
-      zip: '12345',
-      insurance_provider: 'Blue Cross Blue Shield',
-      insurance_policy_number: 'BCBS12345678',
-      insurance_group_number: 'G9876543',
-      primary_care_provider: 'Dr. Robert Johnson',
-      emergency_contact_name: 'John Smith',
-      emergency_contact_phone: '(555) 987-6543',
-      allergies: ['Penicillin', 'Peanuts'],
-      medications: [
-        {
-          name: 'Lisinopril',
-          dosage: '10mg',
-          frequency: 'Once daily',
-          start_date: '2023-01-15'
-        }
-      ],
-      medical_history: [
-        {
-          condition: 'Hypertension',
-          diagnosed_date: '2022-12-10',
-          notes: 'Mild. Controlled with medication.'
-        }
-      ]
-    };
-    return Promise.resolve({ data: mockPatient });
+    return this.getPatientById(patientId);
+  }
+
+  async createPatient(patientData: any) {
+    try {
+      const response = await apiClient.post('/api/medical/patients', patientData);
+      return response;
+    } catch (error) {
+      console.error('Error creating patient:', error);
+      throw error;
+    }
+  }
+
+  async updatePatient(patientData: any) {
+    try {
+      const response = await apiClient.put(`/api/medical/patients/${patientData.patient_id}`, patientData);
+      return response;
+    } catch (error) {
+      console.error('Error updating patient:', error);
+      throw error;
+    }
+  }
+
+  async deletePatient(patientId: string) {
+    try {
+      const response = await apiClient.delete(`/api/medical/patients/${patientId}`);
+      return response;
+    } catch (error) {
+      console.error(`Error deleting patient ${patientId}:`, error);
+      throw error;
+    }
   }
 
   async getAppointments(filters?: any) {
-    const mockAppointments: AppointmentData[] = [
-      {
-        id: '1',
-        patientId: '101',
-        date: '2025-05-08',
-        time: '09:00',
-        type: 'Check-up',
-        status: 'Scheduled',
-        notes: 'Regular check-up'
-      },
-      {
-        id: '2',
-        patientId: '102',
-        date: '2025-05-08',
-        time: '10:00',
-        type: 'Follow-up',
-        status: 'Completed',
-        notes: 'Follow-up after treatment'
-      }
-    ];
-    return Promise.resolve({ data: mockAppointments });
+    try {
+      const response = await apiClient.get('/api/medical/appointments', { params: filters });
+      return response;
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      throw error;
+    }
+  }
+
+  async getAppointment(appointmentId: string) {
+    try {
+      const response = await apiClient.get(`/api/medical/appointments/${appointmentId}`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching appointment ${appointmentId}:`, error);
+      throw error;
+    }
+  }
+
+  async createAppointment(appointmentData: any) {
+    try {
+      const response = await apiClient.post('/api/medical/appointments', appointmentData);
+      return response;
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      throw error;
+    }
+  }
+
+  async updateAppointment(appointmentData: any) {
+    try {
+      const response = await apiClient.put(`/api/medical/appointments/${appointmentData.id}`, appointmentData);
+      return response;
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      throw error;
+    }
+  }
+
+  async deleteAppointment(appointmentId: string) {
+    try {
+      const response = await apiClient.delete(`/api/medical/appointments/${appointmentId}`);
+      return response;
+    } catch (error) {
+      console.error(`Error deleting appointment ${appointmentId}:`, error);
+      throw error;
+    }
   }
 
   async getReportData(params: {
@@ -172,66 +248,204 @@ class MedicalService {
     endDate?: string;
     location?: string;
   }) {
-    const mockData: ReportData = {
-      financial: {
-        revenue: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-          datasets: [
-            {
-              label: 'Revenue',
-              data: [12500, 15200, 18900, 17500, 21000],
-              backgroundColor: '#4caf50'
-            }
-          ]
-        }
-      },
-      demographics: {
-        ageDistribution: {
-          labels: ['0-17', '18-34', '35-50', '51-65', '66+'],
-          data: [15, 22, 28, 20, 15],
-          backgroundColor: ['#f44336', '#ff9800', '#ffeb3b', '#4caf50', '#2196f3']
-        }
-      },
-      appointments: {
-        byType: {
-          labels: ['Check-up', 'Follow-up', 'Emergency', 'Procedure'],
-          data: [45, 30, 15, 10],
-          backgroundColor: ['#4caf50', '#2196f3', '#f44336', '#ff9800']
-        }
-      },
-      claims: {
-        byStatus: {
-          labels: ['Approved', 'Pending', 'Denied'],
-          data: [70, 20, 10],
-          backgroundColor: ['#4caf50', '#ff9800', '#f44336']
-        }
-      }
-    };
-    return Promise.resolve({ data: mockData[params.reportType] });
+    try {
+      const response = await apiClient.get('/api/medical/reports', { params });
+      return response;
+    } catch (error) {
+      console.error('Error fetching report data:', error);
+      throw error;
+    }
   }
 
-  // Mock implementations for other methods that return empty success responses
-  async createPatient(patientData: any) { return Promise.resolve({ data: { success: true } }); }
-  async updatePatient(patientData: any) { return Promise.resolve({ data: { success: true } }); }
-  async deletePatient(patientId: string) { return Promise.resolve({ data: { success: true } }); }
-  async getAppointment(appointmentId: string) { return Promise.resolve({ data: { success: true } }); }
-  async createAppointment(appointmentData: any) { return Promise.resolve({ data: { success: true } }); }
-  async updateAppointment(appointmentData: any) { return Promise.resolve({ data: { success: true } }); }
-  async deleteAppointment(appointmentId: string) { return Promise.resolve({ data: { success: true } }); }
-  async getPatientCharts(patientId: string) { return Promise.resolve({ data: [] }); }
-  async getChart(chartId: string) { return Promise.resolve({ data: { success: true } }); }
-  async createChartEntry(chartData: any) { return Promise.resolve({ data: { success: true } }); }
-  async updateChartEntry(chartData: any) { return Promise.resolve({ data: { success: true } }); }
-  async getPatientHistory(patientId: string) { return Promise.resolve({ data: [] }); }
-  async getPatientDocuments(patientId: string) { return Promise.resolve({ data: [] }); }
-  async uploadDocument(patientId: string, formData: FormData) { return Promise.resolve({ data: { success: true } }); }
-  async deleteDocument(documentId: string) { return Promise.resolve({ data: { success: true } }); }
-  async getPatientBilling(patientId: string) { return Promise.resolve({ data: [] }); }
-  async getClaims(filters?: any) { return Promise.resolve({ data: [] }); }
-  async getClaim(claimId: string) { return Promise.resolve({ data: { success: true } }); }
-  async createClaim(claimData: any) { return Promise.resolve({ data: { success: true } }); }
-  async updateClaim(claimData: any) { return Promise.resolve({ data: { success: true } }); }
-  async getLocations() { return Promise.resolve({ data: [] }); }
+  async getPatientChart(patientId: string) {
+    try {
+      const response = await apiClient.get(`/api/medical/patients/${patientId}/charts`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching charts for patient ${patientId}:`, error);
+      throw error;
+    }
+  }
+
+  // Keep the original method for backward compatibility
+  async getPatientCharts(patientId: string) {
+    return this.getPatientChart(patientId);
+  }
+
+  async getChart(chartId: string) {
+    try {
+      const response = await apiClient.get(`/api/medical/charts/${chartId}`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching chart ${chartId}:`, error);
+      throw error;
+    }
+  }
+
+  async createChartEntry(chartData: any) {
+    try {
+      const response = await apiClient.post('/api/medical/charts', chartData);
+      return response;
+    } catch (error) {
+      console.error('Error creating chart entry:', error);
+      throw error;
+    }
+  }
+
+  async updateChartEntry(chartData: any) {
+    try {
+      const response = await apiClient.put(`/api/medical/charts/${chartData.id}`, chartData);
+      return response;
+    } catch (error) {
+      console.error('Error updating chart entry:', error);
+      throw error;
+    }
+  }
+
+  async getPatientHistory(patientId: string) {
+    try {
+      const response = await apiClient.get(`/api/medical/patients/${patientId}/history`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching history for patient ${patientId}:`, error);
+      throw error;
+    }
+  }
+
+  async getPatientDocuments(patientId: string) {
+    try {
+      const response = await apiClient.get(`/api/medical/patients/${patientId}/documents`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching documents for patient ${patientId}:`, error);
+      throw error;
+    }
+  }
+
+  async uploadDocument(patientId: string, formData: FormData) {
+    try {
+      const response = await apiClient.post(`/api/medical/patients/${patientId}/documents`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response;
+    } catch (error) {
+      console.error(`Error uploading document for patient ${patientId}:`, error);
+      throw error;
+    }
+  }
+
+  async deleteDocument(documentId: string) {
+    try {
+      const response = await apiClient.delete(`/api/medical/documents/${documentId}`);
+      return response;
+    } catch (error) {
+      console.error(`Error deleting document ${documentId}:`, error);
+      throw error;
+    }
+  }
+
+  async getPatientBilling(patientId: string) {
+    try {
+      const response = await apiClient.get(`/api/medical/patients/${patientId}/billing`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching billing for patient ${patientId}:`, error);
+      throw error;
+    }
+  }
+
+  async getClaims(filters?: any) {
+    try {
+      const response = await apiClient.get('/api/medical/claims', { params: filters });
+      return response;
+    } catch (error) {
+      console.error('Error fetching claims:', error);
+      throw error;
+    }
+  }
+
+  async getClaim(claimId: string) {
+    try {
+      const response = await apiClient.get(`/api/medical/claims/${claimId}`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching claim ${claimId}:`, error);
+      throw error;
+    }
+  }
+
+  async createClaim(claimData: any) {
+    try {
+      const response = await apiClient.post('/api/medical/claims', claimData);
+      return response;
+    } catch (error) {
+      console.error('Error creating claim:', error);
+      throw error;
+    }
+  }
+
+  async updateClaim(claimData: any) {
+    try {
+      const response = await apiClient.put(`/api/medical/claims/${claimData.id}`, claimData);
+      return response;
+    } catch (error) {
+      console.error('Error updating claim:', error);
+      throw error;
+    }
+  }
+
+  async getLocations() {
+    try {
+      const response = await apiClient.get('/api/medical/locations');
+      return response;
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+      throw error;
+    }
+  }
+
+  // New methods for vital signs - updated to properly handle the interface
+  async getVitalSigns(patientId: string) {
+    try {
+      const response = await apiClient.get(`/api/medical/patients/${patientId}/vital-signs`);
+      return response;
+    } catch (error) {
+      console.error(`Error fetching vital signs for patient ${patientId}:`, error);
+      throw error;
+    }
+  }
+
+  async createVitalSign(patientId: string, data: VitalSign) {
+    try {
+      const response = await apiClient.post(`/api/medical/patients/${patientId}/vital-signs`, data);
+      return response;
+    } catch (error) {
+      console.error(`Error creating vital sign for patient ${patientId}:`, error);
+      throw error;
+    }
+  }
+
+  async updateVitalSign(patientId: string, vitalSignId: string, data: VitalSign) {
+    try {
+      const response = await apiClient.put(`/api/medical/patients/${patientId}/vital-signs/${vitalSignId}`, data);
+      return response;
+    } catch (error) {
+      console.error(`Error updating vital sign ${vitalSignId} for patient ${patientId}:`, error);
+      throw error;
+    }
+  }
+
+  async deleteVitalSign(patientId: string, vitalSignId: string) {
+    try {
+      const response = await apiClient.delete(`/api/medical/patients/${patientId}/vital-signs/${vitalSignId}`);
+      return response;
+    } catch (error) {
+      console.error(`Error deleting vital sign ${vitalSignId} for patient ${patientId}:`, error);
+      throw error;
+    }
+  }
 }
 
 export const medicalService = new MedicalService();

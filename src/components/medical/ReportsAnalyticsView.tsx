@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Tab } from '@headlessui/react';
-import FinancialDashboard from './reports/FinancialDashboard';
-import ClinicalMetrics from './reports/ClinicalMetrics';
-import OperationalStats from './reports/OperationalStats';
-import CustomReportBuilder from './reports/CustomReportBuilder';
-import ReportSelector from './reports/ReportSelector';
+import { 
+  FinancialDashboard, 
+  ClinicalMetrics, 
+  OperationalStats, 
+  CustomReportBuilder,
+  ReportSelector 
+} from './reports';
 import DateRangePicker from './common/DateRangePicker';
 import LocationSelector from './LocationSelector';
 

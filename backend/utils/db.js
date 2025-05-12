@@ -3,7 +3,8 @@
  * Provides a connection pool for database operations
  */
 
-const { Pool } = require('pg');
+import pg from 'pg';
+const { Pool } = pg;
 
 // Create a PostgreSQL connection pool
 const pool = new Pool({
@@ -82,7 +83,7 @@ const getClient = async () => {
   return client;
 };
 
-module.exports = {
+export {
   pool,
   query,
   getClient

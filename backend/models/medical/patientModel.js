@@ -3,7 +3,7 @@
  * Handles database operations related to patients
  */
 
-const { pool } = require('../../utils/db');
+import { pool } from '../../utils/db.js';
 
 /**
  * Get all patients with optional filtering
@@ -403,7 +403,7 @@ const getPatientAppointments = async (patientId, filters = {}) => {
   }
 };
 
-module.exports = {
+export {
   getAllPatients,
   getPatientById,
   createPatient,

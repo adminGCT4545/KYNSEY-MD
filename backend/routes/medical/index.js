@@ -12,6 +12,7 @@ const appointmentRoutes = require('./appointmentRoutes');
 const chartRoutes = require('./chartRoutes');
 const billingRoutes = require('./billingRoutes');
 const reportingRoutes = require('./reportingRoutes');
+const medicationRoutes = require('./medicationRoutes');
 
 // Register routes
 router.use('/patients', patientRoutes);
@@ -19,6 +20,7 @@ router.use('/appointments', appointmentRoutes);
 router.use('/charts', chartRoutes);
 router.use('/billing', billingRoutes);
 router.use('/reporting', reportingRoutes);
+router.use('/medications', medicationRoutes);
 
 // Root route for medical API
 router.get('/', (req, res) => {
@@ -45,6 +47,10 @@ router.get('/', (req, res) => {
       {
         path: '/api/medical/reporting',
         description: 'Medical reporting and analytics endpoints'
+      },
+      {
+        path: '/api/medical/medications',
+        description: 'Medication and prescription management endpoints'
       }
     ]
   });
